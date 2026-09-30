@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculus Hero: ศึกเวทมนตร์ดิฟและอินทิเกรต</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- KaTeX for crisp Math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- Tone.js for Web Audio sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        mathPurple: '#6D28D9',
+                        mathDark: '#0F172A',
+                        mathNeon: '#06B6D4',
+                        mathGold: '#F59E0B'
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                        'shake': 'shake 0.4s ease-in-out',
+                        'float': 'float 3s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 15px rgba(6, 182, 212, 0.4)' },
+                            '50%': { boxShadow: '0 0 30px rgba(109, 40, 217, 0.8)' }
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '20%, 60%': { transform: 'translateX(-8px)' },
+                            '40%, 80%': { transform: 'translateX(8px)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom styling for KaTeX & sleek elements */
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at center, #1E1B4B 0%, #0F172A 100%);
+            color: #F8FAFC;
+            user-select: none;
+        }
+        .katex { font-size: 1.35rem !important; }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-choice {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-choice:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3);
+        }
+        .btn-choice:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-6 overflow-x-hidden">
+
+    <div id="app" class="w-full max-w-4xl mx-auto glass-panel rounded-3xl p-4 sm:p-8 shadow-2xl relative border border-slate-700/50">
+        
+        <!-- Header Bar -->
+        <header class="flex justify-between items-center pb-4 mb-6 border-b border-slate-700/60">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-400 flex items-center justify-center text-white text-xl font-bold shadow-lg">
+                    <i class="fa-solid to-square-root-variable">∫</i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-300 to-pink-400">
+                        Calculus Hero
+                    </h1>
+                    <p class="text-xs text-slate-400">ศึกผู้กล้าแคลคูลัส : ดิฟ & อินทิเกรต</p>
+                </div>
+            </div>
+            <button id="soundToggleBtn" onclick="toggleAudio()" class="px-3 py-1.5 rounded-lg glass-panel hover:bg-slate-700/50 text-slate-300 text-sm flex items-center gap-2 border border-slate-600/50">
+                <i id="soundIcon" class="fa-solid fa-volume-high text-cyan-400"></i>
+                <span id="soundText" class="hidden sm:inline">เปิดเสียง</span>
+            </button>
+        </header>
+
+        <!-- SCREEN 1: START / MENU -->
+        <div id="startScreen" class="space-y-6 text-center py-6">
+            <div class="animate-float my-4">
+                <i class="fa-solid fa-wand-magic-sparkles text-6xl text-cyan-400 mb-3 drop-shadow-[0_0_15px_rgba(6,182,212,0.6)]"></i>
+                <h2 class="text-3xl font-black text-white">ปราบมอนสเตอร์ด้วยพลังแคลคูลัส!</h2>
+                <p class="text-slate-300 mt-2 max-w-lg mx-auto text-sm sm:text-base">
+                    ตอบคำถามหาอนุพันธ์ (Derivative) และการอินทิเกรต (Integration) เพื่อปล่อยเวทมนตร์โจมตีมอนสเตอร์ก่อนเวลาจะหมด!
+                </p>
+            </div>
+
+            <!-- Mode Selector -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto my-6">
+                <button onclick="selectMode('diff')" id="mode-diff" class="mode-card glass-panel p-5 rounded-2xl border-2 border-purple-500/80 hover:border-purple-400 text-left cursor-pointer transition">
+                    <div class="text-purple-400 text-2xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="font-bold text-lg text-purple-200">อนุพันธ์ (Diff)</div>
+                    <div class="text-xs text-slate-400 mt-1">หา f'(x), กฎกำลัง, กฎลูกโซ่, ไตรโกณมิติ</div>
+                </button>
+
+                <button onclick="selectMode('int')" id="mode-int" class="mode-card glass-panel p-5 rounded-2xl border-2 border-slate-700 hover:border-cyan-400 text-left cursor-pointer transition">
+                    <div class="text-cyan-400 text-2xl mb-2"><i class="fa-solid fa-infinity"></i></div>
+                    <div class="font-bold text-lg text-cyan-200">อินทิเกรต (Integration)</div>
+                    <div class="text-xs text-slate-400 mt-1">หา ∫f(x)dx, อินทิกรัลจำกัดเขต & ไม่จำกัดเขต</div>
+                </button>
+
+                <button onclick="selectMode('mixed')" id="mode-mixed" class="mode-card glass-panel p-5 rounded-2xl border-2 border-slate-700 hover:border-pink-400 text-left cursor-pointer transition">
+                    <div class="text-pink-400 text-2xl mb-2"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                    <div class="font-bold text-lg text-pink-200">โหมดผสม (Mixed)</div>
+                    <div class="text-xs text-slate-400 mt-1">ท้าทายสลับทั้งดิฟและอินทิเกรต</div>
+                </button>
+            </div>
+
+            <button onclick="startGame()" class="w-full sm:w-2/3 py-4 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 hover:from-cyan-400 hover:to-pink-400 text-white font-black text-xl rounded-2xl shadow-lg hover:shadow-cyan-500/40 transition transform hover:-translate-y-0.5 active:translate-y-0">
+                <i class="fa-solid fa-play mr-2"></i> เริ่มการต่อสู้!
+            </button>
+        </div>
+
+        <!-- SCREEN 2: GAMEPLAY -->
+        <div id="gameScreen" class="hidden space-y-6">
+            
+            <!-- Top Status Bar -->
+            <div class="grid grid-cols-3 gap-3 bg-slate-900/80 p-3 rounded-2xl border border-slate-700/80 text-center">
+                <div>
+                    <span class="text-xs text-slate-400 uppercase font-semibold">คะแนน</span>
+                    <div id="scoreDisplay" class="text-xl sm:text-2xl font-black text-amber-400">0</div>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 uppercase font-semibold">คอมโบ</span>
+                    <div id="comboDisplay" class="text-xl sm:text-2xl font-black text-purple-400">0x</div>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 uppercase font-semibold">เลเวลมอนสเตอร์</span>
+                    <div id="levelDisplay" class="text-xl sm:text-2xl font-black text-cyan-400">1</div>
+                </div>
+            </div>
+
+            <!-- Monster Battle Arena -->
+            <div class="relative bg-gradient-to-b from-slate-900/90 to-purple-950/40 rounded-2xl p-4 border border-purple-900/40 overflow-hidden flex flex-col items-center">
+                
+                <!-- HP Bar -->
+                <div class="w-full max-w-md mb-3">
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                        <span id="monsterName" class="text-purple-300">Giga Calculus Slime</span>
+                        <span id="hpText" class="text-emerald-400">100 / 100</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                        <div id="hpBar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 w-full transition-all duration-300"></div>
+                    </div>
+                </div>
+
+                <!-- Monster Avatar -->
+                <div id="monsterAvatar" class="w-24 h-24 sm:w-28 sm:h-28 my-2 flex items-center justify-center text-6xl sm:text-7xl transition transform">
+                    👾
+                </div>
+
+                <!-- Timer Bar -->
+                <div class="w-full mt-2">
+                    <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div id="timerBar" class="h-full bg-amber-400 w-full transition-all duration-100 linear"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Math Question Box -->
+            <div id="questionContainer" class="glass-panel p-6 rounded-2xl border-2 border-cyan-500/40 text-center shadow-lg relative min-h-[130px] flex flex-col items-center justify-center">
+                <div id="questionTypeBadge" class="absolute top-2 left-3 text-xs font-extrabold px-2.5 py-1 rounded-full bg-purple-900/80 text-purple-300 border border-purple-500/40">
+                    จงหาค่าดิฟ f'(x)
+                </div>
+                <div id="mathQuestion" class="my-2 text-xl sm:text-2xl text-white font-serif">
+                    <!-- KaTeX dynamic question render -->
+                </div>
+            </div>
+
+            <!-- Choices Grid -->
+            <div id="choicesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button onclick="checkAnswer(0)" class="btn-choice glass-panel p-4 rounded-xl border border-slate-700/80 hover:border-cyan-400 text-left flex items-center space-x-3 group">
+                    <span class="w-8 h-8 rounded-lg bg-slate-800 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 font-bold flex items-center justify-center transition">A</span>
+                    <div id="choice0" class="text-base text-slate-100 flex-1 overflow-x-auto"></div>
+                </button>
+                <button onclick="checkAnswer(1)" class="btn-choice glass-panel p-4 rounded-xl border border-slate-700/80 hover:border-cyan-400 text-left flex items-center space-x-3 group">
+                    <span class="w-8 h-8 rounded-lg bg-slate-800 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 font-bold flex items-center justify-center transition">B</span>
+                    <div id="choice1" class="text-base text-slate-100 flex-1 overflow-x-auto"></div>
+                </button>
+                <button onclick="checkAnswer(2)" class="btn-choice glass-panel p-4 rounded-xl border border-slate-700/80 hover:border-cyan-400 text-left flex items-center space-x-3 group">
+                    <span class="w-8 h-8 rounded-lg bg-slate-800 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 font-bold flex items-center justify-center transition">C</span>
+                    <div id="choice2" class="text-base text-slate-100 flex-1 overflow-x-auto"></div>
+                </button>
+                <button onclick="checkAnswer(3)" class="btn-choice glass-panel p-4 rounded-xl border border-slate-700/80 hover:border-cyan-400 text-left flex items-center space-x-3 group">
+                    <span class="w-8 h-8 rounded-lg bg-slate-800 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 font-bold flex items-center justify-center transition">D</span>
+                    <div id="choice3" class="text-base text-slate-100 flex-1 overflow-x-auto"></div>
+                </button>
+            </div>
+
+            <!-- Hint & Feedback Message -->
+            <div id="feedbackBox" class="min-h-[40px] text-center text-sm font-semibold flex items-center justify-center">
+                <span id="feedbackText" class="text-slate-400">เลือกคำตอบที่ถูกต้องเพื่อโจมตี!</span>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: GAME OVER / RESULT -->
+        <div id="gameOverScreen" class="hidden text-center space-y-6 py-6">
+            <div class="inline-block p-4 rounded-full bg-slate-800/80 border border-amber-500/50 mb-2">
+                <i class="fa-solid fa-trophy text-5xl text-amber-400 animate-bounce"></i>
+            </div>
+            
+            <h2 class="text-3xl font-black text-white">จบการต่อสู้!</h2>
+            <p id="rankTitle" class="text-lg font-bold text-cyan-300">ตำแหน่ง: Calculus Apprentice</p>
+
+            <!-- Stats Box -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl mx-auto my-4">
+                <div class="glass-panel p-3 rounded-xl border border-slate-700">
+                    <div class="text-xs text-slate-400">คะแนนรวม</div>
+                    <div id="finalScore" class="text-xl font-black text-amber-400">0</div>
+                </div>
+                <div class="glass-panel p-3 rounded-xl border border-slate-700">
+                    <div class="text-xs text-slate-400">ปราบมอนสเตอร์</div>
+                    <div id="finalKills" class="text-xl font-black text-cyan-400">0</div>
+                </div>
+                <div class="glass-panel p-3 rounded-xl border border-slate-700">
+                    <div class="text-xs text-slate-400">ความแม่นยำ</div>
+                    <div id="finalAccuracy" class="text-xl font-black text-emerald-400">0%</div>
+                </div>
+                <div class="glass-panel p-3 rounded-xl border border-slate-700">
+                    <div class="text-xs text-slate-400">คอมโบสูงสุด</div>
+                    <div id="finalCombo" class="text-xl font-black text-purple-400">0x</div>
+                </div>
+            </div>
+
+            <!-- Solution Drawer / Modal Button -->
+            <div id="lastExplanationBox" class="glass-panel p-4 rounded-xl text-left text-xs sm:text-sm text-slate-300 max-w-xl mx-auto border border-slate-700 hidden">
+                <div class="font-bold text-cyan-400 mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> สูตรเฉลยข้อล่าสุด:</div>
+                <div id="explanationContent"></div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto pt-4">
+                <button onclick="startGame()" class="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg transition">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> เล่นอีกครั้ง
+                </button>
+                <button onclick="showScreen('startScreen')" class="flex-1 py-3 glass-panel hover:bg-slate-700/60 text-slate-200 font-bold rounded-xl border border-slate-600 transition">
+                    <i class="fa-solid fa-house mr-2"></i> หน้าหลัก
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT GAME LOGIC -->
+    <script>
+        // Audio Synth Setup using Tone.js
+        let audioEnabled = true;
+        let synth, polySynth;
+
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.Synth().toDestination();
+                polySynth = new Tone.PolySynth(Tone.Synth).toDestination();
+                polySynth.volume.value = -10;
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const soundIcon = document.getElementById('soundIcon');
+            const soundText = document.getElementById('soundText');
+            if (audioEnabled) {
+                soundIcon.className = "fa-solid fa-volume-high text-cyan-400";
+                soundText.innerText = "เปิดเสียง";
+            } else {
+                soundIcon.className = "fa-solid fa-volume-xmark text-slate-500";
+                soundText.innerText = "ปิดเสียง";
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled || typeof Tone === 'undefined') return;
+            try {
+                Tone.start();
+                initAudio();
+                const now = Tone.now();
+                if (type === 'correct') {
+                    polySynth.triggerAttackRelease(["C5", "E5", "G5"], "8n", now);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease("A2", "8n", now);
+                } else if (type === 'hit') {
+                    synth.triggerAttackRelease("C3", "16n", now);
+                } else if (type === 'win') {
+                    polySynth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "4n", now);
+                }
+            } catch (e) {
+                console.log("Audio play error:", e);
+            }
+        }
+
+        // Game Configuration & State
+        let currentMode = 'mixed'; // 'diff', 'int', 'mixed'
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let level = 1;
+        let kills = 0;
+        let totalAnswered = 0;
+        let correctAnswers = 0;
+        
+        let monsterHp = 100;
+        let monsterMaxHp = 100;
+        let timerInterval = null;
+        let timeLeft = 100; // Percentage
+        let timerSpeed = 1.2; // Time reduction per tick
+
+        let currentQuestion = null;
+        let isAnswering = false;
+
+        const MONSTERS = [
+            { name: "Slime Diff-A-Lot", icon: "👾", color: "from-emerald-500 to-cyan-400" },
+            { name: "Integral Goblin", icon: "👺", color: "from-green-500 to-emerald-600" },
+            { name: "Trig-Dragon", icon: "🐉", color: "from-purple-500 to-indigo-600" },
+            { name: "Exponential Phoenix", icon: "🦅", color: "from-amber-500 to-red-600" },
+            { name: "Calculus Arch-Demon", icon: "👿", color: "from-pink-600 to-rose-700" }
+        ];
+
+        // Utility Functions for Math Generation
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function getRandomNonZero(min, max) {
+            let val = 0;
+            while (val === 0) val = getRandomInt(min, max);
+            return val;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Generate Math Questions (Diff & Integrals)
+        function generateQuestion() {
+            let type = currentMode;
+            if (type === 'mixed') {
+                type = Math.random() > 0.5 ? 'diff' : 'int';
+            }
+
+            if (type === 'diff') {
+                return generateDerivativeQuestion();
+            } else {
+                return generateIntegralQuestion();
+            }
+        }
+
+        // DERIVATIVE PROBLEMS GENERATOR
+        function generateDerivativeQuestion() {
+            const subType = getRandomInt(1, 5);
+            let qMath = "", correctMath = "", distractors = [], explanation = "";
+
+            if (subType === 1) {
+                // Power Rule: f(x) = a*x^n
+                const a = getRandomNonZero(-5, 9);
+                const n = getRandomInt(2, 6);
+                const coeff = a * n;
+                const pow = n - 1;
+
+                qMath = `f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}x^{${n}}`;
+                correctMath = `f'(x) = ${coeff === 1 ? '' : coeff === -1 ? '-' : coeff}x${pow === 1 ? '' : '^{' + pow + '}'}`;
+                
+                distractors = [
+                    `f'(x) = ${a}x^{${pow}}`,
+                    `f'(x) = ${coeff}x^{${n}}`,
+                    `f'(x) = ${a*pow}x^{${pow+1}}`
+                ];
+                explanation = `ใช้กฎกำลัง: $\\frac{d}{dx}[a x^n] = a \\cdot n x^{n-1}$ จะได้ $(${a})(${n})x^{${n-1}} = ${coeff}x^{${pow}}$`;
+
+            } else if (subType === 2) {
+                // Polynomial: f(x) = ax^2 + bx + c
+                const a = getRandomNonZero(2, 5);
+                const b = getRandomNonZero(-6, 6);
+                const c = getRandomInt(-9, 9);
+
+                qMath = `f(x) = ${a}x^2 ${b > 0 ? '+' : ''}${b}x ${c >= 0 ? '+' : ''}${c}`;
+                correctMath = `f'(x) = ${2*a}x ${b > 0 ? '+' : ''}${b}`;
+
+                distractors = [
+                    `f'(x) = ${a}x ${b > 0 ? '+' : ''}${b}`,
+                    `f'(x) = ${2*a}x`,
+                    `f'(x) = ${2*a}x^2 ${b > 0 ? '+' : ''}${b}`
+                ];
+                explanation = `ดิฟทีละพจน์: $\\frac{d}{dx}[${a}x^2] + \\frac{d}{dx}[${b}x] + \\frac{d}{dx}[${c}] = ${2*a}x ${b > 0 ? '+' : ''}${b}$`;
+
+            } else if (subType === 3) {
+                // Trig functions: sin(ax) or cos(ax)
+                const isSin = Math.random() > 0.5;
+                const a = getRandomInt(2, 5);
+
+                if (isSin) {
+                    qMath = `f(x) = \\sin(${a}x)`;
+                    correctMath = `f'(x) = ${a}\\cos(${a}x)`;
+                    distractors = [
+                        `f'(x) = -${a}\\cos(${a}x)`,
+                        `f'(x) = \\cos(${a}x)`,
+                        `f'(x) = -\\sin(${a}x)`
+                    ];
+                    explanation = `ใช้กฎลูกโซ่: $\\frac{d}{dx}[\\sin(u)] = \\cos(u) \\cdot u'$ จะได้ $\\cos(${a}x) \\cdot ${a} = ${a}\\cos(${a}x)$`;
+                } else {
+                    qMath = `f(x) = \\cos(${a}x)`;
+                    correctMath = `f'(x) = -${a}\\sin(${a}x)`;
+                    distractors = [
+                        `f'(x) = ${a}\\sin(${a}x)`,
+                        `f'(x) = -\\sin(${a}x)`,
+                        `f'(x) = ${a}\\cos(${a}x)`
+                    ];
+                    explanation = `ใช้กฎลูกโซ่: $\\frac{d}{dx}[\\cos(u)] = -\\sin(u) \\cdot u'$ จะได้ $-\\sin(${a}x) \\cdot ${a} = -${a}\\sin(${a}x)$`;
+                }
+
+            } else if (subType === 4) {
+                // Exponential: e^(ax)
+                const a = getRandomInt(2, 5);
+                qMath = `f(x) = e^{${a}x}`;
+                correctMath = `f'(x) = ${a}e^{${a}x}`;
+                distractors = [
+                    `f'(x) = e^{${a}x}`,
+                    `f'(x) = ${a}x e^{${a-1}x}`,
+                    `f'(x) = \\frac{1}{${a}}e^{${a}x}`
+                ];
+                explanation = `สูตรอนุพันธ์ e^u: $\\frac{d}{dx}[e^{au}] = a e^{au}$ จะได้ $${a}e^{${a}x}$`;
+
+            } else {
+                // Natural Logarithm: ln(ax) or a*ln(x)
+                const a = getRandomInt(2, 7);
+                qMath = `f(x) = ${a}\\ln(x)`;
+                correctMath = `f'(x) = \\frac{${a}}{x}`;
+                distractors = [
+                    `f'(x) = \\frac{1}{x}`,
+                    `f'(x) = ${a}x`,
+                    `f'(x) = \\frac{1}{${a}x}`
+                ];
+                explanation = `สูตรอนุพันธ์ ln(x): $\\frac{d}{dx}[a \\ln(x)] = a \\cdot \\frac{1}{x} = \\frac{${a}}{x}$`;
+            }
+
+            return buildChoiceObject("จงหาอนุพันธ์ f'(x)", qMath, correctMath, distractors, explanation);
+        }
+
+        // INTEGRAL PROBLEMS GENERATOR
+        function generateIntegralQuestion() {
+            const subType = getRandomInt(1, 4);
+            let qMath = "", correctMath = "", distractors = [], explanation = "";
+
+            if (subType === 1) {
+                // Power rule: \int a x^n dx
+                const n = getRandomInt(1, 4);
+                const mult = n + 1;
+                const k = getRandomInt(1, 3);
+                const a = k * mult; // Ensures integer coefficient
+
+                qMath = `\\int ${a}x^{${n}} \\, dx`;
+                correctMath = `${k}x^{${mult}} + C`;
+                distractors = [
+                    `${a*mult}x^{${mult}} + C`,
+                    `${k}x^{${n}} + C`,
+                    `${a}x^{${mult}} + C`
+                ];
+                explanation = `สูตรอินทิเกรตพาวเวอร์: $\\int a x^n dx = \\frac{a}{n+1} x^{n+1} + C$ จะได้ $\\frac{${a}}{${mult}} x^{${mult}} + C = ${k}x^{${mult}} + C$`;
+
+            } else if (subType === 2) {
+                // Trig Integrals: \int \cos(ax) dx or \int \sin(ax) dx
+                const a = getRandomInt(2, 5);
+                const isCos = Math.random() > 0.5;
+
+                if (isCos) {
+                    qMath = `\\int \\cos(${a}x) \\, dx`;
+                    correctMath = `\\frac{1}{${a}}\\sin(${a}x) + C`;
+                    distractors = [
+                        `-${a}\\sin(${a}x) + C`,
+                        `-\\frac{1}{${a}}\\sin(${a}x) + C`,
+                        `${a}\\sin(${a}x) + C`
+                    ];
+                    explanation = `อินทิเกรต $\\int \\cos(ax) dx = \\frac{1}{a}\\sin(ax) + C$ จะได้ $\\frac{1}{${a}}\\sin(${a}x) + C$`;
+                } else {
+                    qMath = `\\int \\sin(${a}x) \\, dx`;
+                    correctMath = `-\\frac{1}{${a}}\\cos(${a}x) + C`;
+                    distractors = [
+                        `\\frac{1}{${a}}\\cos(${a}x) + C`,
+                        `-${a}\\cos(${a}x) + C`,
+                        `${a}\\cos(${a}x) + C`
+                    ];
+                    explanation = `อินทิเกรต $\\int \\sin(ax) dx = -\\frac{1}{a}\\cos(ax) + C$ จะได้ $-\\frac{1}{${a}}\\cos(${a}x) + C$`;
+                }
+
+            } else if (subType === 3) {
+                // Exponential: \int e^(ax) dx
+                const a = getRandomInt(2, 6);
+                qMath = `\\int e^{${a}x} \\, dx`;
+                correctMath = `\\frac{1}{${a}}e^{${a}x} + C`;
+                distractors = [
+                    `${a}e^{${a}x} + C`,
+                    `e^{${a}x} + C`,
+                    `\\frac{1}{${a}x}e^{${a}x} + C`
+                ];
+                explanation = `อินทิเกรต $\\int e^{ax} dx = \\frac{1}{a}e^{ax} + C$ จะได้ $\\frac{1}{${a}}e^{${a}x} + C$`;
+
+            } else {
+                // Definite Integral: \int_0^b 2x dx = b^2
+                const b = getRandomInt(2, 5);
+                const a = getRandomInt(1, 3);
+                // \int_0^b (2a x) dx = [a x^2]_0^b = a * b^2
+                const ans = a * b * b;
+
+                qMath = `\\int_{0}^{${b}} ${2*a}x \\, dx`;
+                correctMath = `${ans}`;
+                distractors = [
+                    `${ans * 2}`,
+                    `${a * b}`,
+                    `${ans + a}`
+                ];
+                explanation = `หาอินทิกรัลจำกัดเขต: $[${a}x^2]_0^{${b}} = ${a}(${b})^2 - 0 = ${ans}$`;
+            }
+
+            return buildChoiceObject("จงหาผลลัพธ์การอินทิเกรต", qMath, correctMath, distractors, explanation);
+        }
+
+        function buildChoiceObject(badge, qMath, correctMath, distractors, explanation) {
+            const rawChoices = [
+                { text: correctMath, isCorrect: true },
+                { text: distractors[0], isCorrect: false },
+                { text: distractors[1], isCorrect: false },
+                { text: distractors[2], isCorrect: false }
+            ];
+
+            const shuffled = shuffleArray(rawChoices);
+            const correctIndex = shuffled.findIndex(c => c.isCorrect);
+
+            return {
+                badge: badge,
+                questionMath: qMath,
+                choices: shuffled.map(c => c.text),
+                correctIndex: correctIndex,
+                explanation: explanation
+            };
+        }
+
+        function selectMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('border-purple-500/80', 'border-cyan-400', 'border-pink-400');
+                card.classList.add('border-slate-700');
+            });
+            const activeCard = document.getElementById(`mode-${mode}`);
+            if (mode === 'diff') activeCard.classList.add('border-purple-500/80');
+            if (mode === 'int') activeCard.classList.add('border-cyan-400');
+            if (mode === 'mixed') activeCard.classList.add('border-pink-400');
+        }
+
+        function showScreen(screenId) {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function startGame() {
+            score = 0;
+            combo = 0;
+            maxCombo = 0;
+            level = 1;
+            kills = 0;
+            totalAnswered = 0;
+            correctAnswers = 0;
+            monsterMaxHp = 100;
+            monsterHp = 100;
+            
+            updateScoreboard();
+            updateMonsterUI();
+            showScreen('gameScreen');
+            nextQuestion();
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 100;
+            updateTimerBar();
+            
+            // Timer gets faster as level increases
+            const speed = Math.max(0.4, 1.2 - (level * 0.08));
+            
+            timerInterval = setInterval(() => {
+                timeLeft -= speed;
+                updateTimerBar();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 100);
+        }
+
+        function updateTimerBar() {
+            const bar = document.getElementById('timerBar');
+            bar.style.width = `${Math.max(0, timeLeft)}%`;
+            if (timeLeft < 30) {
+                bar.className = "h-full bg-rose-500 w-full transition-all duration-100 linear";
+            } else {
+                bar.className = "h-full bg-amber-400 w-full transition-all duration-100 linear";
+            }
+        }
+
+        function nextQuestion() {
+            isAnswering = false;
+            currentQuestion = generateQuestion();
+
+            document.getElementById('questionTypeBadge').innerText = currentQuestion.badge;
+            
+            // Render Math Latex using KaTeX
+            katex.render(currentQuestion.questionMath, document.getElementById('mathQuestion'), {
+                throwOnError: false
+            });
+
+            currentQuestion.choices.forEach((choice, index) => {
+                const choiceEl = document.getElementById(`choice${index}`);
+                katex.render(choice, choiceEl, { throwOnError: false });
+            });
+
+            document.getElementById('feedbackText').className = "text-slate-400";
+            document.getElementById('feedbackText').innerText = "เลือกคำตอบที่ถูกต้องเพื่อปล่อยเวทมนตร์!";
+            startTimer();
+        }
+
+        function checkAnswer(selectedIndex) {
+            if (isAnswering) return;
+            isAnswering = true;
+            clearInterval(timerInterval);
+
+            totalAnswered++;
+            const isCorrect = (selectedIndex === currentQuestion.correctIndex);
+
+            if (isCorrect) {
+                correctAnswers++;
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+
+                // Points based on remaining time + combo bonus
+                const speedBonus = Math.floor(timeLeft * 2);
+                const comboBonus = combo * 20;
+                const earnedPoints = 100 + speedBonus + comboBonus;
+                score += earnedPoints;
+
+                // Damage Monster
+                const damage = Math.floor(35 + (combo * 5));
+                monsterHp -= damage;
+
+                playSound('correct');
+                playSound('hit');
+
+                // Animate Monster Damage
+                const avatar = document.getElementById('monsterAvatar');
+                avatar.classList.add('animate-shake', 'scale-90');
+                setTimeout(() => avatar.classList.remove('animate-shake', 'scale-90'), 400);
+
+                document.getElementById('feedbackText').className = "text-emerald-400 font-bold";
+                document.getElementById('feedbackText').innerText = `✨ ถูกต้อง! สร้างความเสียหาย ${damage} หน่วย (คอมโบ ${combo}x)`;
+
+                if (monsterHp <= 0) {
+                    kills++;
+                    level++;
+                    monsterMaxHp = Math.floor(monsterMaxHp * 1.25);
+                    monsterHp = monsterMaxHp;
+                    playSound('win');
+                    setTimeout(() => updateMonsterUI(), 600);
+                }
+
+                updateScoreboard();
+                updateMonsterUI();
+                setTimeout(nextQuestion, 1200);
+
+            } else {
+                combo = 0;
+                playSound('wrong');
+                
+                // Screen shake on wrong answer
+                const app = document.getElementById('app');
+                app.classList.add('animate-shake');
+                setTimeout(() => app.classList.remove('animate-shake'), 400);
+
+                document.getElementById('feedbackText').className = "text-rose-400 font-bold";
+                document.getElementById('feedbackText').innerText = `❌ คำตอบไม่ถูกต้อง! เสียจังหวะคอมโบ`;
+
+                updateScoreboard();
+                setTimeout(nextQuestion, 1500);
+            }
+        }
+
+        function handleTimeOut() {
+            if (isAnswering) return;
+            isAnswering = true;
+            combo = 0;
+            totalAnswered++;
+            playSound('wrong');
+
+            document.getElementById('feedbackText').className = "text-amber-400 font-bold";
+            document.getElementById('feedbackText').innerText = "⏰ หมดเวลา! มอนสเตอร์หลบการโจมตีได้";
+            
+            updateScoreboard();
+            setTimeout(nextQuestion, 1400);
+        }
+
+        function updateScoreboard() {
+            document.getElementById('scoreDisplay').innerText = score;
+            document.getElementById('comboDisplay').innerText = `${combo}x`;
+            document.getElementById('levelDisplay').innerText = level;
+        }
+
+        function updateMonsterUI() {
+            const mIndex = (level - 1) % MONSTERS.length;
+            const monster = MONSTERS[mIndex];
+
+            document.getElementById('monsterName').innerText = `${monster.name} (Lv. ${level})`;
+            document.getElementById('monsterAvatar').innerText = monster.icon;
+            document.getElementById('hpText').innerText = `${Math.max(0, monsterHp)} / ${monsterMaxHp}`;
+
+            const hpPercent = Math.max(0, (monsterHp / monsterMaxHp) * 100);
+            const hpBar = document.getElementById('hpBar');
+            hpBar.style.width = `${hpPercent}%`;
+
+            if (hpPercent < 30) {
+                hpBar.className = "h-full bg-gradient-to-r from-rose-600 to-amber-500 w-full transition-all duration-300";
+            } else {
+                hpBar.className = "h-full bg-gradient-to-r from-emerald-500 to-cyan-400 w-full transition-all duration-300";
+            }
+
+            // Check Game Over Condition (e.g. 10 levels clear or timer out repeatedly)
+            if (kills >= 8) {
+                endGame(true);
+            }
+        }
+
+        // Trigger Game Over
+        function endGame() {
+            clearInterval(timerInterval);
+            playSound('win');
+
+            const accuracy = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
+            
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('finalKills').innerText = kills;
+            document.getElementById('finalAccuracy').innerText = `${accuracy}%`;
+            document.getElementById('finalCombo').innerText = `${maxCombo}x`;
+
+            // Calculate Rank Title
+            let rank = "Calculus Novice (ผู้เริ่มต้น)";
+            if (score > 3000) rank = "Calculus Archmage (จอมเวทแคลคูลัสไร้เทียมทาน)";
+            else if (score > 2000) rank = "Derivative Knight (อัศวินดิฟเวหา)";
+            else if (score > 1000) rank = "Integral Apprentice (ผู้ฝึกหัดอินทิเกรต)";
+
+            document.getElementById('rankTitle').innerText = `ตำแหน่ง: ${rank}`;
+
+            // Show last explanation if available
+            if (currentQuestion && currentQuestion.explanation) {
+                const expBox = document.getElementById('lastExplanationBox');
+                expBox.classList.remove('hidden');
+                katex.render(currentQuestion.explanation, document.getElementById('explanationContent'), {
+                    throwOnError: false
+                });
+            }
+
+            showScreen('gameOverScreen');
+        }
+
+        // Initialize App on window load
+        window.onload = function() {
+            selectMode('mixed');
+        };
+    </script>
+</body>
+</html>
